@@ -1,0 +1,1 @@
+accuracyReport("trigraph", trigraph_accuracy, merged_trigraph_accuracy_data_accuracy, merged_trigraph_speed_data_accuracy, merged_trigraph_keyPreference_data_accuracy, merged_trigraph_reaction_data_accuracy)
