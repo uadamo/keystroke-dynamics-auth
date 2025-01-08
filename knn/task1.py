@@ -58,10 +58,6 @@ accuracy = accuracy_score(DU_y_test, DU_y_pred)
 #precision = precision_score(DU_y_test, DU_y_pred, average="micro")
 #recall = recall_score(DU_y_test, DU_y_pred, average="micro")
 
-# ax = plt.gca()
-# knn_disp = metrics.RocCurveDisplay.from_estimator(knn, DU_X_test, DU_y_test, ax=ax, alpha=0.8)
-# plt.show()
-
 print("Accuracy:", accuracy)
 # print("Precision:", precision)
 # print("Recall:", recall)
