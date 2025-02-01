@@ -52,7 +52,6 @@ print(results_DU)
 
 results_DU_accuracy = featureAnalysisSingleData(DU_accuracy_data)
 print(results_DU_accuracy)
-
 results_DU_speed = featureAnalysisSingleData(DU_speed_data)
 print(results_DU_speed)
 
@@ -112,5 +111,5 @@ print(results_UD_keyPreference)
 results_UD_reaction = featureAnalysisSingleData(UD_reaction_data)
 print(results_UD_reaction)
 
-featureAccuracyAnalysis(DU_data, DD_data, UU_data, UD_data, trigraph_data, accuracy_data, speed_data, keyPreference_data, reaction_data)
+# featureAccuracyAnalysis(DU_data, DD_data, UU_data, UD_data, trigraph_data, accuracy_data, speed_data, keyPreference_data, reaction_data)
 

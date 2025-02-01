@@ -10,10 +10,12 @@ import matplotlib.pyplot as plt
 from sklearn.tree import export_graphviz
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC, SVC
 from IPython.display import Image
 import seaborn as sns
 import graphviz
+import graphvi
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, f1_score, ConfusionMatrixDisplay
 from ast import literal_eval
 
 def accuracyReport(mainFeatureName, mainFeatureAccuracy, mergedAccuracy, mergedSpeed, mergedKeyPreference, mergedReaction):
@@ -34,25 +36,37 @@ def accuracyReportNoKp(mainFeatureName, mainFeatureAccuracy, mergedAccuracy, mer
         # print(f"{mainFeatureName} + {key} , {value}")
         print(value)
 
-# def confusionMatrixAndScores():
-#     FP = confusion_matrix.sum(axis=0) - np.diag(confusion_matrix)  
-#     FN = confusion_matrix.sum(axis=1) - np.diag(confusion_matrix)
-#     TP = np.diag(confusion_matrix)
-#     TN = confusion_matrix.values.sum() - (FP + FN + TP)
-#     # Sensitivity, hit rate, recall, or true positive rate
-#     TPR = TP/(TP+FN)
-#     # Specificity or true negative rate
-#     TNR = TN/(TN+FP) 
-#     # Precision or positive predictive value
-#     PPV = TP/(TP+FP)
-#     # # Negative predictive value
-#     NPV = TN/(TN+FN)
-#     # # Fall out or false positive rate
-#     FPR = FP/(FP+TN)
-#     # False negative rate
-#     FNR = FN/(TP+FN)
-#     # False discovery rate
-#     FDR = FP/(TP+FP)
+
+def featureAnalysisSingleData(data):
+    accuracyList = []
+    precisionList = []
+    recallList = []
+    f1ScoreList = []
+    for _ in range(10):
+        # return [accuracy, precision, recall, f1score] for each feature
+        X = data.drop(['user','session', 'task', 'iteration'], axis=1)
+        y = data['user']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.4)
+
+        clf = make_pipeline(StandardScaler(), SVC(gamma='auto'))
+        clf.fit(X_train, y_train)
+
+        main_feature_pred = clf.predict(X_test)
+
+        #best value - 1, worst - 0
+        main_feature_accuracy = accuracy_score(y_test, main_feature_pred)
+        accuracyList.append(main_feature_accuracy)
+        main_feature_precision = precision_score(y_test, main_feature_pred, average='macro', zero_division=0)
+        precisionList.append(main_feature_precision)
+        main_feature_recall = recall_score(y_test, main_feature_pred, average='macro', zero_division=0)
+        recallList.append(main_feature_recall)
+        main_feature_f1_score = f1_score(y_test, main_feature_pred, average='macro', zero_division=0)
+        f1ScoreList.append(main_feature_f1_score)
+    
+    print(accuracyList)
+    return [np.mean(main_feature_accuracy), np.mean(main_feature_precision), np.mean(main_feature_recall), np.mean(main_feature_f1_score) ]
+
+
 
 
 def featureAccuracyAnalysis(DU_data, DD_data, UU_data, UD_data, trigraph_data, accuracy_data, speed_data, keyPreference_data, reaction_data):
