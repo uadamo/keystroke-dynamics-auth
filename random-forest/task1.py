@@ -12,7 +12,7 @@ import seaborn as sns
 import graphviz
 from helpers import featureAccuracyAnalysis, featureAnalysisSingleData;
 
-
+UD_data_all = pd.read_csv('./csv_files/UD_task1_all.csv')
 DU_data = pd.read_csv('./csv_files/DU_task1.csv')
 DD_data = pd.read_csv('./csv_files/DD_task1.csv')
 UU_data = pd.read_csv('./csv_files/UU_task1.csv')
@@ -97,8 +97,14 @@ print(results_UU_reaction)
 
 # #UD
 
+print("regular")
 results_UD= featureAnalysisSingleData(UD_data)
 print(results_UD)
+
+print("all")
+results_UD_all= featureAnalysisSingleData(UD_data_all)
+print(results_UD_all)
+
 
 results_UD_accuracy = featureAnalysisSingleData(UD_accuracy_data)
 print(results_UD_accuracy)
@@ -109,5 +115,7 @@ print(results_UD_speed)
 results_UD_keyPreference = featureAnalysisSingleData(UD_keyPreference_data)
 print(results_UD_keyPreference)
 
+
 results_UD_reaction = featureAnalysisSingleData(UD_reaction_data)
 print(results_UD_reaction)
+
