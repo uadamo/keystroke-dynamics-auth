@@ -10,7 +10,7 @@ from sklearn.tree import export_graphviz
 from IPython.display import Image
 import seaborn as sns
 import graphviz
-from helpers import featureAnalysis, featureAnalysisSequentialSelector;
+from helpers import featureAnalysis, featureAnalysisRecursiveCV, featureAnalysisSequentialSelector;
 from functools import reduce
 
 import xlwt 
@@ -153,5 +153,68 @@ def xlReportNoSelection():
     
     wb.save("task2a_rf_no_selection.xls")  
 
-xlReportNoSelection()
+# xlReportNoSelection()
 
+
+def xlReportRecursiveCVSelection():
+    wb = xlwt.Workbook() 
+
+    # single features - no selection
+    ws = wb.add_sheet('task2a-single-rf-recursive-CV')
+
+    ws.write(0,1, "nr. of best features")
+    ws.write(0,2, "removed features (least to most important)")
+    ws.write(0,3,"accuracy (before filtering)")
+    ws.write(0,4,"accuracy")
+    ws.write(0,5,"precision")
+    ws.write(0,6,"recall")
+    ws.write(0,7,"f1-score")
+
+    # featureAnalysisRecursiveCV(UD_non_temporal_and_statistic_data)
+
+    feat = [featureAnalysisRecursiveCV(UU_non_temporal_and_statistic_data)]
+
+    for i, values in enumerate(feat):
+        ws.write(i+1,1,values[0])
+        ws.write(i+1,2,values[1])
+        ws.write(i+1,3,values[2])
+        ws.write(i+1,4,values[3])
+        ws.write(i+1,5,values[4])
+        ws.write(i+1,6,values[5])
+        ws.write(i+1,7,values[6])
+    
+    wb.save("task2a_rf_recursive-CV.xls")  
+
+# xlReportRecursiveCVSelection()
+
+
+def xlReportSequentialSelection():
+    wb = xlwt.Workbook() 
+
+    # single features - no selection
+    ws = wb.add_sheet('task2a-rf-sequential')
+
+    ws.write(0,1, "nr. of best features")
+    ws.write(0,2, "removed features")
+    ws.write(0,3,"accuracy (before filtering)")
+    ws.write(0,4,"accuracy")
+    ws.write(0,5,"precision")
+    ws.write(0,6,"recall")
+    ws.write(0,7,"f1-score")
+
+    # featureAnalysisRecursiveCV(UD_non_temporal_and_statistic_data)
+
+    feat = [featureAnalysisSequentialSelector(UU_non_temporal_and_statistic_data, 25),featureAnalysisSequentialSelector(UU_non_temporal_and_statistic_data, 30), featureAnalysisSequentialSelector(UU_non_temporal_and_statistic_data, 35)]
+
+    for i, values in enumerate(feat):
+        ws.write(i+1,1,values[0])
+        ws.write(i+1,2,values[1])
+        ws.write(i+1,3,values[2])
+        ws.write(i+1,4,values[3])
+        ws.write(i+1,5,values[4])
+        ws.write(i+1,6,values[5])
+        ws.write(i+1,7,values[6])
+    
+    wb.save("task2a_rf_sequential.xls")  
+
+xlReportSequentialSelection()

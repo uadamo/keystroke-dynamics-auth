@@ -3,15 +3,15 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import RFE, RFECV, SequentialFeatureSelector
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from scipy.stats import randint
 import matplotlib.pyplot as plt
 from sklearn.multiclass import OneVsOneClassifier
 from sklearn.tree import export_graphviz
-from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import LinearSVC, SVC
+from sklearn.svm import LinearSVC
 from IPython.display import Image
 import seaborn as sns
 import graphviz
@@ -24,20 +24,19 @@ def featureAnalysis(data):
     precisionList = []
     recallList = []
     f1ScoreList = []
+
+    scaler = StandardScaler()
+    X = data.drop(['user','session', 'task', 'iteration'], axis=1)
+    y = data['user']
+    X = scaler.fit(X).transform(X)
+
     for _ in range(10):
         # return [accuracy, precision, recall, f1score] for each feature
-        X = data.drop(['user','session', 'task', 'iteration'], axis=1)
-        y = data['user']
-        X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.4)
 
-        # ovo = OneVsOneClassifier(rf).fit(X_train, y_train)
-        # main_feature_pred = ovo.predict(X_test)
-        clf = OneVsOneClassifier(make_pipeline(StandardScaler(), SVC(gamma='auto',decision_function_shape="ovo"))).fit(X_train, y_train)
-        # clf.predict(X_test)
-        # clf = make_pipeline(StandardScaler(), SVC(gamma='auto',decision_function_shape="ovo"))
-        # clf.fit(X_train, y_train)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.4)
+        clf = OneVsOneClassifier(LinearSVC( max_iter=50000, random_state=42)).fit(X_train, y_train)
+
         main_feature_pred = clf.predict(X_test)
-        #best value - 1, worst - 0
         main_feature_accuracy = accuracy_score(y_test, main_feature_pred)
         accuracyList.append(main_feature_accuracy)
         main_feature_precision = precision_score(y_test, main_feature_pred, average='macro', zero_division=0)
@@ -50,57 +49,111 @@ def featureAnalysis(data):
     return [np.mean(accuracyList), np.mean(precisionList), np.mean(recallList), np.mean(f1ScoreList) ]
 
 
-# def featureAnalysisSequentialSelector(data):
-        
-#     X = data.drop(['user','session', 'task', 'iteration'], axis=1)
-#     y = data['user']
+def featureAnalysisSequentialSelector(data, n):
 
-#     rfc = RandomForestClassifier()
-#     sfs = SequentialFeatureSelector(rfc, scoring='accuracy',)
-#     sfs.fit(X, y)
-#     print(sfs.get_feature_names_out())
+    print(n)
+        
+    X = data.drop(['user','session', 'task', 'iteration'], axis=1)
+    y = data['user']
+    originalAccuracy = featureAnalysis(data)[0]
     
-#     accuracyList = []
-#     precisionList = []
-#     recallList = []
-#     f1ScoreList = []
+    totalFeatures = X.columns
 
-#     for _ in range(10):
+    # ovo = OneVsOneClassifier(svm).fit(X_train, y_train)
+    # main_feature_pred = ovo.predict(X_test)
+    scaler = StandardScaler()
+    X = data.drop(['user','session', 'task', 'iteration'], axis=1)
+    y = data['user']
+    X = scaler.fit(X).transform(X)
+    clf = LinearSVC( max_iter=50000, random_state=42)
 
-#         X_train, X_test, y_train, y_test = train_test_split(sfs.transform(X), y, shuffle=True, test_size=0.4)
-#         rf = RandomForestClassifier()
-#         # ovo = OneVsOneClassifier(rf).fit(X_train, y_train)
-#         # main_feature_pred = ovo.predict(X_test)
-#         main_feature_pred = rf.fit(X_train, y_train)
+    selector = SequentialFeatureSelector(clf, cv=5, scoring='accuracy', direction="forward", n_features_to_select=n)
+    selector.fit(X, y)
 
-#         #best value - 1, worst - 0
-#         main_feature_accuracy = accuracy_score(y_test, main_feature_pred)
-#         accuracyList.append(main_feature_accuracy)
-#         main_feature_precision = precision_score(y_test, main_feature_pred, average='macro', zero_division=0)
-#         precisionList.append(main_feature_precision)
-#         main_feature_recall = recall_score(y_test, main_feature_pred, average='macro', zero_division=0)
-#         recallList.append(main_feature_recall)
-#         main_feature_f1_score = f1_score(y_test, main_feature_pred, average='macro', zero_division=0)
-#         f1ScoreList.append(main_feature_f1_score)
+    removedFeatures = totalFeatures[np.invert(selector.support_)]
+    print(removedFeatures)
 
-#         cnf_matrix = confusion_matrix(y_true = y_test, y_pred=main_feature_pred)
-#         FP = cnf_matrix.sum(axis=0) - np.diag(cnf_matrix)  
-#         FN = cnf_matrix.sum(axis=1) - np.diag(cnf_matrix)
-#         TP = np.diag(cnf_matrix)
-#         TN = cnf_matrix.sum() - (FP + FN + TP)
-
-#         FP = FP.astype(float)
-#         FN = FN.astype(float)
-#         TP = TP.astype(float)
-#         TN = TN.astype(float)
+    X = selector.transform(X)
+    # print(totalFeatures)
+    accuracyList = []
+    precisionList = []
+    recallList = []
+    f1ScoreList = []
         
-#         FPR = FP/(FP+TN)
-#         FNR = FN/(TP+FN)
+    for _ in range(10):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.4)
+        rf = OneVsOneClassifier(LinearSVC( max_iter=50000, random_state=42))
+        rf.fit(X_train, y_train)
+        main_feature_pred = rf.predict(X_test)
+        main_feature_accuracy = accuracy_score(y_test, main_feature_pred)
+        accuracyList.append(main_feature_accuracy)
+        main_feature_precision = precision_score(y_test, main_feature_pred, average='macro', zero_division=0)
+        precisionList.append(main_feature_precision)
+        main_feature_recall = recall_score(y_test, main_feature_pred, average='macro', zero_division=0)
+        recallList.append(main_feature_recall)
+        main_feature_f1_score = f1_score(y_test, main_feature_pred, average='macro', zero_division=0)
+        f1ScoreList.append(main_feature_f1_score)
         
-#         ACC = (TP+TN)/(TP+FP+FN+TN)
+    return [n, " ".join(removedFeatures) , originalAccuracy, np.mean(accuracyList), np.mean(precisionList), np.mean(recallList), np.mean(f1ScoreList)]
 
+
+def featureAnalysisRecursiveCV(data):
+
+    X = data.drop(['user','session', 'task', 'iteration'], axis=1)
+    scaler = StandardScaler()
+    y = data['user']
+    originalAccuracy = featureAnalysis(data)[0]
+
+    totalFeatures = X.columns
+    print("Total features : %d" %len(totalFeatures))
+    # finding an optimal number of features with RFACV
+    min_features_to_select = 5
+    svc = OneVsOneClassifier(LinearSVC( max_iter=500000, random_state=42))
+    svc.fit(X, y)
+    selector = RFECV(svc.estimators_[0], step=1, cv=5,min_features_to_select=min_features_to_select)
+    X = scaler.fit(X).transform(X)
+    selector.fit(X, y)
+
+    X = selector.transform(X)
+    removedFeatures = totalFeatures[np.invert(selector.support_)]
+    featureImportances = [{'feature':f, 'importance':selector.ranking_[i]} for i,f in enumerate(totalFeatures)]
+    removedFeaturesByImportance = [p for p in featureImportances if p["feature"] in removedFeatures]
+    removedFeaturesByImportance.sort(key=lambda x: x["importance"], reverse=True)
+    print(removedFeaturesByImportance)
+
+
+    # print(selector.support_)
+    # print(selector.ranking_)
+    print("Optimal number of features : %d" % selector.n_features_)
+    plt.figure()
+    plt.xlabel("Nr. of Features")
+    plt.ylabel("Accuracy, %")
     
-#     return [np.mean(main_feature_accuracy), np.mean(main_feature_precision), np.mean(main_feature_recall), np.mean(main_feature_f1_score) ]
+    plt.plot(range(min_features_to_select,len(selector.cv_results_["mean_test_score"]) +min_features_to_select),selector.cv_results_["mean_test_score"])
+    plt.show()
+
+    accuracyList = []
+    precisionList = []
+    recallList = []
+    f1ScoreList = []
+
+    for _ in range(10):
+        print("iteration")
+        X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.4)
+        sv = OneVsOneClassifier(LinearSVC(max_iter=500000, random_state=42))
+        sv.fit(X_train, y_train)
+        main_feature_pred = sv.predict(X_test)
+        main_feature_accuracy = accuracy_score(y_test, main_feature_pred)
+        accuracyList.append(main_feature_accuracy)
+        main_feature_precision = precision_score(y_test, main_feature_pred, average='macro', zero_division=0)
+        precisionList.append(main_feature_precision)
+        main_feature_recall = recall_score(y_test, main_feature_pred, average='macro', zero_division=0)
+        recallList.append(main_feature_recall)
+        main_feature_f1_score = f1_score(y_test, main_feature_pred, average='macro', zero_division=0)
+        f1ScoreList.append(main_feature_f1_score)
+
+    print(np.mean(accuracyList))
+    return [len(selector.get_feature_names_out(input_features=totalFeatures)), " ".join([x["feature"] for x in removedFeaturesByImportance]) , originalAccuracy, np.mean(accuracyList), np.mean(precisionList), np.mean(recallList), np.mean(f1ScoreList)]
 
 
 
