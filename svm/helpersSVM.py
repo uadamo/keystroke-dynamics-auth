@@ -34,7 +34,7 @@ def featureAnalysis(data):
         # return [accuracy, precision, recall, f1score] for each feature
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.4)
-        clf = OneVsOneClassifier(LinearSVC( max_iter=50000, random_state=42)).fit(X_train, y_train)
+        clf = OneVsOneClassifier(LinearSVC( max_iter=50000)).fit(X_train, y_train)
 
         main_feature_pred = clf.predict(X_test)
         main_feature_accuracy = accuracy_score(y_test, main_feature_pred)
@@ -65,11 +65,13 @@ def featureAnalysisSequentialSelector(data, n):
     X = data.drop(['user','session', 'task', 'iteration'], axis=1)
     y = data['user']
     X = scaler.fit(X).transform(X)
-    clf = LinearSVC( max_iter=50000, random_state=42)
+    clf = LinearSVC( max_iter=50000)
 
     selector = SequentialFeatureSelector(clf, cv=5, scoring='accuracy', direction="forward", n_features_to_select=n)
     selector.fit(X, y)
 
+    topFeatures = totalFeatures[selector.support_]
+    print(topFeatures)
     removedFeatures = totalFeatures[np.invert(selector.support_)]
     print(removedFeatures)
 
@@ -82,7 +84,7 @@ def featureAnalysisSequentialSelector(data, n):
         
     for _ in range(10):
         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.4)
-        rf = OneVsOneClassifier(LinearSVC( max_iter=50000, random_state=42))
+        rf = OneVsOneClassifier(LinearSVC( max_iter=50000))
         rf.fit(X_train, y_train)
         main_feature_pred = rf.predict(X_test)
         main_feature_accuracy = accuracy_score(y_test, main_feature_pred)
@@ -94,7 +96,7 @@ def featureAnalysisSequentialSelector(data, n):
         main_feature_f1_score = f1_score(y_test, main_feature_pred, average='macro', zero_division=0)
         f1ScoreList.append(main_feature_f1_score)
         
-    return [n, " ".join(removedFeatures) , originalAccuracy, np.mean(accuracyList), np.mean(precisionList), np.mean(recallList), np.mean(f1ScoreList)]
+    return [n, " ".join(topFeatures) ," ".join(removedFeatures) , originalAccuracy, np.mean(accuracyList), np.mean(precisionList), np.mean(recallList), np.mean(f1ScoreList)]
 
 
 def featureAnalysisRecursiveCV(data):
@@ -108,9 +110,9 @@ def featureAnalysisRecursiveCV(data):
     print("Total features : %d" %len(totalFeatures))
     # finding an optimal number of features with RFACV
     min_features_to_select = 5
-    svc = OneVsOneClassifier(LinearSVC( max_iter=500000, random_state=42))
+    svc = OneVsOneClassifier(LinearSVC( max_iter=500000))
     svc.fit(X, y)
-    selector = RFECV(svc.estimators_[0], step=1, cv=5,min_features_to_select=min_features_to_select)
+    selector = RFECV(svc.estimators_[0], step=1, cv=4,min_features_to_select=min_features_to_select)
     X = scaler.fit(X).transform(X)
     selector.fit(X, y)
 
@@ -140,7 +142,7 @@ def featureAnalysisRecursiveCV(data):
     for _ in range(10):
         print("iteration")
         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.4)
-        sv = OneVsOneClassifier(LinearSVC(max_iter=500000, random_state=42))
+        sv = OneVsOneClassifier(LinearSVC(max_iter=500000))
         sv.fit(X_train, y_train)
         main_feature_pred = sv.predict(X_test)
         main_feature_accuracy = accuracy_score(y_test, main_feature_pred)

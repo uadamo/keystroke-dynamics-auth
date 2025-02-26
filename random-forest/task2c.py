@@ -37,9 +37,8 @@ keyPreference_data = pd.read_csv('./csv_files/keyPreference_task2c.csv')
 speed_data = pd.read_csv('./csv_files/speed_task2c.csv')
 reaction_data = pd.read_csv('./csv_files/reaction_task2c.csv')
 UD_negative_data = pd.read_csv('./csv_files/UD_negative_task2c.csv')
-DU_negative_data = pd.read_csv('./csv_files/DU_negative_task2c.csv')
 
-non_temporal_features = [accuracy_data, keyPreference_data, speed_data, reaction_data, UD_negative_data, DU_negative_data]
+non_temporal_features = [accuracy_data, keyPreference_data, speed_data, reaction_data, UD_negative_data]
 merged_non_temporal_features = reduce(lambda left, right: pd.merge(left, right, on=['user','session', "task", "iteration"], how='inner'), non_temporal_features)
 
 
@@ -198,16 +197,17 @@ def xlReportSequentialSelection():
     ws = wb.add_sheet('task2c-rf-sequential')
 
     ws.write(0,1, "nr. of best features")
-    ws.write(0,2, "removed features")
-    ws.write(0,3,"accuracy (before filtering)")
-    ws.write(0,4,"accuracy")
-    ws.write(0,5,"precision")
-    ws.write(0,6,"recall")
-    ws.write(0,7,"f1-score")
+    ws.write(0,2, "top features")
+    ws.write(0,3, "removed features")
+    ws.write(0,4,"accuracy (before filtering)")
+    ws.write(0,5,"accuracy")
+    ws.write(0,6,"precision")
+    ws.write(0,7,"recall")
+    ws.write(0,8,"f1-score")
 
     # featureAnalysisRecursiveCV(UD_non_temporal_and_statistic_data)
 
-    feat = [featureAnalysisSequentialSelector(UU_non_temporal_and_statistic_data, 25),featureAnalysisSequentialSelector(UU_non_temporal_and_statistic_data, 30), featureAnalysisSequentialSelector(UU_non_temporal_and_statistic_data, 35)]
+    feat = [featureAnalysisSequentialSelector(UU_non_temporal_and_statistic_data, 20)]
 
     for i, values in enumerate(feat):
         ws.write(i+1,1,values[0])
@@ -217,6 +217,7 @@ def xlReportSequentialSelection():
         ws.write(i+1,5,values[4])
         ws.write(i+1,6,values[5])
         ws.write(i+1,7,values[6])
+        ws.write(i+1,8,values[7])
     
     wb.save("task2c_rf_sequential.xls")  
 

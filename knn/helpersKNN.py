@@ -61,31 +61,37 @@ def featureAnalysis(data):
     return [np.mean(accuracyList), np.mean(precisionList), np.mean(recallList), np.mean(f1ScoreList) ]
 
 
+
+
 def featureAnalysisSequentialSelector(data, n):
-        
+    
     X = data.drop(['user','session', 'task', 'iteration'], axis=1)
     y = data['user']
+    originalAccuracy = featureAnalysis(data)[0]
     
     totalFeatures = X.columns
+    scaler = StandardScaler()
+    X = data.drop(['user','session', 'task', 'iteration'], axis=1)
+    y = data['user']
+    X = scaler.fit(X).transform(X)
 
-    print(featureAnalysis(data))
+    rfc = KNeighborsClassifier()
+    selector = SequentialFeatureSelector(rfc, cv=3, scoring='accuracy', direction="forward", n_features_to_select=n)
+    selector.fit(X, y)
 
-    knn = KNeighborsClassifier()
-    sfs = SequentialFeatureSelector(knn, cv=5, scoring='accuracy', n_features_to_select=n)
-    sfs.fit(X, y)
-    X = sfs.transform(X)
+    topFeatures = totalFeatures[selector.support_]
+    print(topFeatures)
+    removedFeatures = totalFeatures[np.invert(selector.support_)]
+    print(removedFeatures)
+
+    X = selector.transform(X)
     # print(totalFeatures)
     accuracyList = []
     precisionList = []
     recallList = []
     f1ScoreList = []
-        
     for _ in range(10):
         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.4)
-        scaler_main = StandardScaler()
-        scaler_main.fit(X_train)
-        X_train = scaler_main.transform(X_train)
-        X_test = scaler_main.transform(X_test)
         scores_main = {}
         scores_main_list = []
         for k in range(1,15):
@@ -109,5 +115,6 @@ def featureAnalysisSequentialSelector(data, n):
         main_feature_f1_score = f1_score(y_test, main_feature_pred, average='macro', zero_division=0)
         f1ScoreList.append(main_feature_f1_score)
         
-    return [n, " ".join(sfs.get_feature_names_out(input_features=totalFeatures)) , np.mean(main_feature_accuracy), np.mean(main_feature_precision), np.mean(main_feature_recall), np.mean(main_feature_f1_score)]
+    return [n, " ".join(topFeatures) ," ".join(removedFeatures) , originalAccuracy, np.mean(accuracyList), np.mean(precisionList), np.mean(recallList), np.mean(f1ScoreList)]
+
 

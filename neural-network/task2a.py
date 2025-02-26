@@ -36,9 +36,7 @@ accuracy_data = pd.read_csv('./csv_files/accuracy_task2a.csv')
 speed_data = pd.read_csv('./csv_files/speed_task2a.csv')
 reaction_data = pd.read_csv('./csv_files/reaction_task2a.csv')
 UD_negative_data = pd.read_csv('./csv_files/UD_negative_task2a.csv')
-DU_negative_data = pd.read_csv('./csv_files/DU_negative_task2a.csv')
-
-non_temporal_features = [accuracy_data, speed_data, reaction_data, UD_negative_data, DU_negative_data]
+non_temporal_features = [accuracy_data, speed_data, reaction_data, UD_negative_data]
 merged_non_temporal_features = reduce(lambda left, right: pd.merge(left, right, on=['user','session', "task", "iteration"], how='inner'), non_temporal_features)
 
 
@@ -154,7 +152,7 @@ def xlReportNoSelection():
     
     wb.save("task2a_mlp_no_selection.xls")  
 
-#xlReportNoSelection()
+# xlReportNoSelection()
 
 def xlReportSequentialSelection():
     wb = xlwt.Workbook() 
@@ -163,12 +161,13 @@ def xlReportSequentialSelection():
     ws = wb.add_sheet('task2a-mlp-sequential')
 
     ws.write(0,1, "nr. of best features")
-    ws.write(0,2, "removed features")
-    ws.write(0,3,"accuracy (before filtering)")
-    ws.write(0,4,"accuracy")
-    ws.write(0,5,"precision")
-    ws.write(0,6,"recall")
-    ws.write(0,7,"f1-score")
+    ws.write(0,2, "top features")
+    ws.write(0,3, "removed features")
+    ws.write(0,4,"accuracy (before filtering)")
+    ws.write(0,5,"accuracy")
+    ws.write(0,6,"precision")
+    ws.write(0,7,"recall")
+    ws.write(0,8,"f1-score")
 
     # featureAnalysisRecursiveCV(UD_non_temporal_and_statistic_data)
 
@@ -182,38 +181,9 @@ def xlReportSequentialSelection():
         ws.write(i+1,5,values[4])
         ws.write(i+1,6,values[5])
         ws.write(i+1,7,values[6])
+        ws.write(i+1,8,values[7])
     
     wb.save("task2a_mlp_sequential.xls")  
 
 xlReportSequentialSelection()
-
-# def xlReportRecursiveCVSelection():
-#     wb = xlwt.Workbook() 
-
-#     # single features - no selection
-#     ws = wb.add_sheet('task2a-mlp-recursive-CV')
-
-#     ws.write(0,1, "nr. of best features")
-#     ws.write(0,2, "removed features (least to most important)")
-#     ws.write(0,3,"accuracy (before filtering)")
-#     ws.write(0,4,"accuracy")
-#     ws.write(0,5,"precision")
-#     ws.write(0,6,"recall")
-#     ws.write(0,7,"f1-score")
-
-
-#     feat = [featureAnalysisRecursiveCV(UU_non_temporal_and_statistic_data)]
-
-#     for i, values in enumerate(feat):
-#         ws.write(i+1,1,values[0])
-#         ws.write(i+1,2,values[1])
-#         ws.write(i+1,3,values[2])
-#         ws.write(i+1,4,values[3])
-#         ws.write(i+1,5,values[4])
-#         ws.write(i+1,6,values[5])
-#         ws.write(i+1,7,values[6])
-    
-#     wb.save("task2a_mlp_recursive-CV.xls")  
-
-# # xlReportRecursiveCVSelection()
 

@@ -64,11 +64,15 @@ def featureAnalysisSequentialSelector(data, n):
     # main_feature_pred = ovo.predict(X_test)
     X = data.drop(['user','session', 'task', 'iteration'], axis=1)
     y = data['user']
-    mlp =  make_pipeline(StandardScaler(), MLPClassifier( solver="lbfgs", random_state=42, max_iter=5000000000))
+    scaler = StandardScaler()
+    X = scaler.fit(X).transform(X)
+    mlp =  MLPClassifier( solver="lbfgs", random_state=42, max_iter=5000000000)
 
-    selector = SequentialFeatureSelector(mlp, cv=5, scoring='accuracy', direction="forward", n_features_to_select=n)
+    selector = SequentialFeatureSelector(mlp, cv=2, scoring='accuracy', direction="forward", n_features_to_select=n)
     selector.fit(X, y)
 
+    topFeatures = totalFeatures[selector.support_]
+    print(topFeatures)
     removedFeatures = totalFeatures[np.invert(selector.support_)]
     print(removedFeatures)
 
@@ -94,65 +98,4 @@ def featureAnalysisSequentialSelector(data, n):
         f1ScoreList.append(main_feature_f1_score)
         
     return [n, " ".join(removedFeatures) , originalAccuracy, np.mean(accuracyList), np.mean(precisionList), np.mean(recallList), np.mean(f1ScoreList)]
-
-
-# def featureAnalysisRecursiveCV(data):
-
-#     X = data.drop(['user','session', 'task', 'iteration'], axis=1)
-#     scaler = StandardScaler()
-#     y = data['user']
-#     originalAccuracy = featureAnalysis(data)[0]
-
-#     totalFeatures = X.columns
-#     print("Total features : %d" %len(totalFeatures))
-#     # finding an optimal number of features with RFACV
-#     min_features_to_select = 5
-#     svc = OneVsOneClassifier(MLPClassifier( solver="lbfgs", random_state=42))
-#     svc.fit(X, y)
-#     selector = RFECV(svc.estimators_[0], step=1, cv=5,min_features_to_select=min_features_to_select)
-#     X = scaler.fit(X).transform(X)
-#     selector.fit(X, y)
-
-#     X = selector.transform(X)
-#     removedFeatures = totalFeatures[np.invert(selector.support_)]
-#     featureImportances = [{'feature':f, 'importance':selector.ranking_[i]} for i,f in enumerate(totalFeatures)]
-#     removedFeaturesByImportance = [p for p in featureImportances if p["feature"] in removedFeatures]
-#     removedFeaturesByImportance.sort(key=lambda x: x["importance"], reverse=True)
-#     print(removedFeaturesByImportance)
-
-
-#     # print(selector.support_)
-#     # print(selector.ranking_)
-#     print("Optimal number of features : %d" % selector.n_features_)
-#     plt.figure()
-#     plt.xlabel("Nr. of Features")
-#     plt.ylabel("Accuracy, %")
-    
-#     plt.plot(range(min_features_to_select,len(selector.cv_results_["mean_test_score"]) +min_features_to_select),selector.cv_results_["mean_test_score"])
-#     plt.show()
-
-#     accuracyList = []
-#     precisionList = []
-#     recallList = []
-#     f1ScoreList = []
-
-#     for _ in range(10):
-#         print("iteration")
-#         X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.4)
-#         sv = OneVsOneClassifier(MLPClassifier( solver="lbfgs", random_state=42))
-#         sv.fit(X_train, y_train)
-#         main_feature_pred = sv.predict(X_test)
-#         main_feature_accuracy = accuracy_score(y_test, main_feature_pred)
-#         accuracyList.append(main_feature_accuracy)
-#         main_feature_precision = precision_score(y_test, main_feature_pred, average='macro', zero_division=0)
-#         precisionList.append(main_feature_precision)
-#         main_feature_recall = recall_score(y_test, main_feature_pred, average='macro', zero_division=0)
-#         recallList.append(main_feature_recall)
-#         main_feature_f1_score = f1_score(y_test, main_feature_pred, average='macro', zero_division=0)
-#         f1ScoreList.append(main_feature_f1_score)
-
-#     print(np.mean(accuracyList))
-#     return [len(selector.get_feature_names_out(input_features=totalFeatures)), " ".join([x["feature"] for x in removedFeaturesByImportance]) , originalAccuracy, np.mean(accuracyList), np.mean(precisionList), np.mean(recallList), np.mean(f1ScoreList)]
-
-
 
